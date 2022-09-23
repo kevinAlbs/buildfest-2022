@@ -1,6 +1,7 @@
 package org.buildfest2022;
 
 import com.mongodb.client.model.*;
+import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -11,6 +12,7 @@ import io.micronaut.core.annotation.NonNull;
 import jakarta.inject.Singleton;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
@@ -64,6 +66,25 @@ public class MongoDbDocumentRepository implements DocumentRepository {
   }
 
   private Mono<Boolean> upsertAllLemmas(List<String> lemmas, ObjectId documentId) {
+    if (mongoConf.getEncrypted()) {
+      // Queryable Encryption does not support multiple insert one operations in one command.
+      Flux<Boolean> f = Flux.empty();
+
+      for (String lemma : lemmas) {
+        for (String l : lemmas) {
+          System.out.println ("Lemma: " + l);
+        }
+
+        var mono = Mono.from(getLemmasCollection().updateOne(
+                Filters.eq("lemma", lemma),
+                Updates.combine(Updates.set("lemma", lemma), Updates.addToSet("document_ids", documentId)),
+              new UpdateOptions().upsert(true))).map(updateResult -> true).onErrorReturn(false);
+
+        f = f.mergeWith (mono);
+      }
+      return f.reduce(true, (x, y) -> x && y);
+    }
+
     List<WriteModel<Lemma>> bulkUpsert = new ArrayList<>();
     for (String lemma : lemmas) {
       bulkUpsert.add(
