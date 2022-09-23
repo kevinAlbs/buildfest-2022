@@ -10,3 +10,4 @@ db:
   lemma-collection: 'lemmas'
   document-collection: 'documents'
   secret-collection: 'secrets'
+  encrypted: true

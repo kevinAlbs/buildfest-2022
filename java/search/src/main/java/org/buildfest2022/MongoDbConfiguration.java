@@ -15,4 +15,6 @@ public interface MongoDbConfiguration extends Named {
 
   @NonNull
   String getSecretCollection();
+
+  boolean getEncrypted();
 }

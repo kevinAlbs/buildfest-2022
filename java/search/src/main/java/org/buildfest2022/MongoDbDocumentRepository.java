@@ -6,6 +6,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import io.micronaut.configuration.mongo.core.AbstractMongoConfiguration;
 import io.micronaut.core.annotation.NonNull;
 import jakarta.inject.Singleton;
 import org.bson.types.ObjectId;
@@ -19,11 +20,11 @@ public class MongoDbDocumentRepository implements DocumentRepository {
 
   private final MongoDbConfiguration mongoConf;
 
-  private final MongoClient mongoClient;
+  private MongoClient mongoClient;
 
-  public MongoDbDocumentRepository(MongoDbConfiguration mongoConf, MongoClient mongoClient) {
+  public MongoDbDocumentRepository(MongoDbConfiguration mongoConf, AbstractMongoConfiguration config) throws Exception {
     this.mongoConf = mongoConf;
-    this.mongoClient = mongoClient;
+    this.mongoClient = MongoClientFactory.Create(mongoConf, config);
   }
 
   @Override
